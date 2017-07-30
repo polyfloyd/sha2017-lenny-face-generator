@@ -24,7 +24,7 @@ ugfx.init()
 # Load our custom font.
 for comp_name in ["ears", "eyes", "mouth"]:
     comp_list = []
-    with open(resolve_file("lenny_%s" % comp_name), "rb") as f:
+    with open(resolve_file("lenny_%s.png" % comp_name), "rb") as f:
         comp = []
         while True:
             char_header = f.read(3)

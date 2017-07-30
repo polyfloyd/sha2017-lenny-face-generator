@@ -100,5 +100,5 @@ for comp_name in face.keys():
             ])
             font_object += binary_raster
 
-    with open(path.join(path.dirname(__file__), "lenny_%s" % comp_name), "wb") as f:
+    with open(path.join(path.dirname(__file__), "lenny_%s.png" % comp_name), "wb") as f:
         f.write(font_object)
