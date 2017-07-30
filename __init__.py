@@ -1,4 +1,4 @@
-import json
+import appglue
 import ugfx
 
 BADGE_EINK_WIDTH  = 296
@@ -10,17 +10,25 @@ def resolve_file(rel_path):
     return __file__.rsplit('/', 1)[0] + '/' + rel_path
 
 class Char(object):
-    def __init__(self, char):
-        self.char = char
+    def __init__(self, filename, fd):
+        offset = fd.tell()
+        metadata = f.read(3)
+        self.__width = metadata[0] << 8 | metadata[1]
+        self.__height = metadata[2]
+        self.__filename = filename
+        self.__offset = offset
+        fd.seek(offset + 3 + self.width() * self.height() // 8)
 
     def width(self):
-        return self.char["w"]
+        return self.__width
 
     def height(self):
-        return self.char["h"]
+        return self.__height
 
     def __raster(self):
-        return self.char["d"]
+        with open(self.__filename, "rb") as f:
+            f.seek(self.__offset + 3)
+            return f.read(self.width() * self.height() // 8)
 
     def render(self, at_x, at_y):
         width = self.width()
@@ -29,7 +37,7 @@ class Char(object):
         for x in range(0, width):
             for y in range(0, height):
                 i = y * width + x
-                if raster[i // 8] & (1 << (i % 8)):
+                if raster[i // 8] & (1 << (i & 7)):
                     ugfx.pixel(at_x + x, at_y + y, ugfx.BLACK)
 
 ugfx.init()
@@ -37,7 +45,8 @@ ugfx.init()
 # Load our custom font.
 for comp_name in ["ears", "eyes", "mouth"]:
     comp_list = []
-    with open(resolve_file("lenny_%s.png" % comp_name), "rb") as f:
+    filename = resolve_file("lenny_%s.png" % comp_name)
+    with open(filename, "rb") as f:
         comp = []
         while True:
             char_header = f.read(3)
@@ -45,6 +54,7 @@ for comp_name in ["ears", "eyes", "mouth"]:
                 break # EOF
             # Decode the number of bytes in the character.
             char_size = char_header[1] << 8 | char_header[2]
+            char_offset = f.tell()
 
             # This bit indicates whether the character should be considered
             # part of a a collection.
@@ -52,14 +62,7 @@ for comp_name in ["ears", "eyes", "mouth"]:
                 comp_list.append(comp)
                 comp = []
 
-            binary_raster = f.read(char_size)
-            width = binary_raster[0] << 8 | binary_raster[1]
-            height = binary_raster[2]
-            comp.append(Char({
-                "w": width,
-                "h": height,
-                "d": binary_raster[3:3 + width * height // 8],
-            }))
+            comp.append(Char(filename, f))
     font[comp_name] = comp_list
 
 
@@ -69,7 +72,6 @@ creation = {
     "ears": 1,
 }
 cursor_position = 2
-#cursor_hidden = False
 
 def render():
     ugfx.clear(ugfx.WHITE)
@@ -95,14 +97,18 @@ def render():
     ugfx.flush()
 
 def cursor_move(delta):
+    global cursor_position
     cursor_position = (cursor_position + delta + 5) % 5
     render()
 
 def rotate_selection(delta):
+    global creation
+    global cursor_position
+    global font
     comp_name = ["ears", "eyes", "mouth", "eyes", "ears"][cursor_position]
     i = creation[comp_name]
     n = len(font[comp_name])
-    creation[creation[comp_name]] = (creation[creation[comp_name]] + delta + n) % n
+    creation[comp_name] = (creation[comp_name] + delta + n) % n
     render()
 
 
@@ -113,3 +119,4 @@ ugfx.input_attach(ugfx.JOY_LEFT, lambda pressed: cursor_move(-1) if pressed else
 ugfx.input_attach(ugfx.JOY_RIGHT, lambda pressed: cursor_move(1) if pressed else ())
 ugfx.input_attach(ugfx.JOY_UP, lambda pressed: rotate_selection(-1) if pressed else ())
 ugfx.input_attach(ugfx.JOY_DOWN, lambda pressed: rotate_selection(1) if pressed else ())
+ugfx.input_attach(ugfx.BTN_START, lambda pressed: appglue.home())
