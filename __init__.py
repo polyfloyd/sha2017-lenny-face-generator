@@ -9,15 +9,28 @@ font = {}
 def resolve_file(rel_path):
     return __file__.rsplit('/', 1)[0] + '/' + rel_path
 
-def render_char(at_x, at_y, char):
-    width = char["w"]
-    height = char["h"]
-    raster = char["d"]
-    for x in range(0, width):
-        for y in range(0, height):
-            i = y * width + x
-            if raster[i // 8] & (1 << (i % 8)):
-                ugfx.pixel(at_x + x, at_y + y, ugfx.BLACK)
+class Char(object):
+    def __init__(self, char):
+        self.char = char
+
+    def width(self):
+        return self.char["w"]
+
+    def height(self):
+        return self.char["h"]
+
+    def __raster(self):
+        return self.char["d"]
+
+    def render(self, at_x, at_y):
+        width = self.width()
+        height = self.height()
+        raster = self.__raster()
+        for x in range(0, width):
+            for y in range(0, height):
+                i = y * width + x
+                if raster[i // 8] & (1 << (i % 8)):
+                    ugfx.pixel(at_x + x, at_y + y, ugfx.BLACK)
 
 ugfx.init()
 
@@ -42,11 +55,11 @@ for comp_name in ["ears", "eyes", "mouth"]:
             binary_raster = f.read(char_size)
             width = binary_raster[0] << 8 | binary_raster[1]
             height = binary_raster[2]
-            comp.append({
+            comp.append(Char({
                 "w": width,
                 "h": height,
                 "d": binary_raster[3:3 + width * height // 8],
-            })
+            }))
     font[comp_name] = comp_list
 
 
@@ -61,22 +74,22 @@ cursor_position = 2
 def render():
     ugfx.clear(ugfx.WHITE)
 
-    start_y = BADGE_EINK_HEIGHT // 2 - font["mouth"][0][0]["h"] // 2
+    start_y = BADGE_EINK_HEIGHT // 2 - font["mouth"][0][0].height() // 2
     total_width = 0
     characters = []
     for (comp_name, comp_n) in [("ears", 0), ("eyes", 0), ("mouth", 0), ("eyes", 1), ("ears", 1)]:
         comp = font[comp_name][creation[comp_name]]
         char = comp[comp_n % len(comp)]
-        total_width += char["w"]
+        total_width += char.width()
         characters.append(char)
     start_x = BADGE_EINK_WIDTH // 2 - total_width // 2
 
     advance_x = start_x
     for i, char in enumerate(characters):
-        render_char(advance_x, start_y, char)
+        char.render(advance_x, start_y)
         if i == cursor_position:
-            ugfx.fill_circle(advance_x + char["w"] // 2, start_y + char["h"] + 0, 5, ugfx.BLACK);
-        advance_x += char["w"]
+            ugfx.fill_circle(advance_x + char.width() // 2, start_y + char.height() + 0, 5, ugfx.BLACK);
+        advance_x += char.width()
 
     ugfx.string(0, BADGE_EINK_HEIGHT - 24, "http://textsmili.es", "PermanentMarker22", ugfx.BLACK)
     ugfx.flush()
