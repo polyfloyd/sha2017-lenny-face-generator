@@ -81,21 +81,13 @@ def encode_image(image):
     return buf
 
 
-#odir = path.join(path.dirname(__file__), "raster")
 face = json.load(open(path.join(path.dirname(__file__), "face.json")))
-#try:
-#    os.makedirs(odir)
-#except:
-#    pass # directory already exists |:(
-
 
 for comp_name in face.keys():
     font_object = bytearray()
     comp_list = []
     for item in face[comp_name]:
         for i, s in enumerate(item):
-#            print i, s
-#            name = "_".join([ "%0.8x" % ord(c) for c in s])
             image = render_string_to_image(s, FONT_HEIGHT)
 
             binary_raster = encode_image(image)
