@@ -67,9 +67,9 @@ for comp_name in ["ears", "eyes", "mouth"]:
     font[comp_name] = comp_list
 
 creation = {
-    "mouth": int(badge.nvs_get_str("lenny_face", "mouth", "1")),
-    "eyes": int(badge.nvs_get_str("lenny_face", "eyes", "24")),
-    "ears": int(badge.nvs_get_str("lenny_face", "ears", "1")),
+    "mouth": int(badge.nvs_get_str("lenny_face", "mouth", "0")),
+    "eyes": int(badge.nvs_get_str("lenny_face", "eyes", "0")),
+    "ears": int(badge.nvs_get_str("lenny_face", "ears", "0")),
 }
 cursor_position = 2
 
