@@ -98,8 +98,6 @@ def render():
         if i == cursor_position:
             ugfx.fill_circle(advance_x + char.width() // 2, start_y + char.height() + 0, 5, ugfx.BLACK);
         advance_x += char.width()
-
-    ugfx.string(0, BADGE_EINK_HEIGHT - 24, "http://textsmili.es", "PermanentMarker22", ugfx.BLACK)
     ugfx.flush()
 
 def cursor_move(delta):
