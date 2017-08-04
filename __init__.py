@@ -1,4 +1,5 @@
 import appglue
+import badge
 import ugfx
 
 BADGE_EINK_WIDTH  = 296
@@ -65,13 +66,18 @@ for comp_name in ["ears", "eyes", "mouth"]:
             comp.append(Char(filename, f))
     font[comp_name] = comp_list
 
-
 creation = {
-    "mouth": 1,
-    "eyes": 24,
-    "ears": 1,
+    "mouth": int(badge.nvs_get_str("lenny_face", "mouth", "1")),
+    "eyes": int(badge.nvs_get_str("lenny_face", "eyes", "24")),
+    "ears": int(badge.nvs_get_str("lenny_face", "ears", "1")),
 }
 cursor_position = 2
+
+
+def store_creation():
+    global creation
+    for comp_name, val in creation.items():
+        badge.nvs_set_str("lenny_face", comp_name, str(val))
 
 def render():
     ugfx.clear(ugfx.WHITE)
@@ -109,6 +115,7 @@ def rotate_selection(delta):
     i = creation[comp_name]
     n = len(font[comp_name])
     creation[comp_name] = (creation[comp_name] + delta + n) % n
+    store_creation()
     render()
 
 
