@@ -41,6 +41,25 @@ class Char(object):
                 if raster[i // 8] & (1 << (i & 7)):
                     ugfx.pixel(at_x + x, at_y + y, ugfx.BLACK)
 
+def render_creation(at_func, creation, cursor_position=None):
+    total_width = 0
+    characters = []
+    for (comp_name, comp_n) in [("ears", 0), ("eyes", 0), ("mouth", 0), ("eyes", 1), ("ears", 1)]:
+        comp = font[comp_name][creation[comp_name]]
+        char = comp[comp_n % len(comp)]
+        total_width += char.width()
+        characters.append(char)
+
+    (at_x, at_y) = at_func(total_width, font["mouth"][0][0].height())
+
+    advance_x = at_x
+    for i, char in enumerate(characters):
+        char.render(advance_x, at_y)
+        if i == cursor_position:
+            ugfx.fill_circle(advance_x + char.width() // 2, at_y + char.height() + 0, 5, ugfx.BLACK);
+        advance_x += char.width()
+
+
 ugfx.init()
 
 # Load our custom font.
@@ -81,23 +100,10 @@ def store_creation():
 
 def render():
     ugfx.clear(ugfx.WHITE)
-
-    start_y = BADGE_EINK_HEIGHT // 2 - font["mouth"][0][0].height() // 2
-    total_width = 0
-    characters = []
-    for (comp_name, comp_n) in [("ears", 0), ("eyes", 0), ("mouth", 0), ("eyes", 1), ("ears", 1)]:
-        comp = font[comp_name][creation[comp_name]]
-        char = comp[comp_n % len(comp)]
-        total_width += char.width()
-        characters.append(char)
-    start_x = BADGE_EINK_WIDTH // 2 - total_width // 2
-
-    advance_x = start_x
-    for i, char in enumerate(characters):
-        char.render(advance_x, start_y)
-        if i == cursor_position:
-            ugfx.fill_circle(advance_x + char.width() // 2, start_y + char.height() + 0, 5, ugfx.BLACK);
-        advance_x += char.width()
+    render_creation(
+            lambda w, h: (BADGE_EINK_WIDTH // 2 - w // 2, BADGE_EINK_HEIGHT // 2 - h // 2),
+            creation,
+            cursor_position)
     ugfx.flush()
 
 def cursor_move(delta):
