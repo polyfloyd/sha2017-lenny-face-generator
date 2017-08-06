@@ -1,10 +1,18 @@
 import badge
 import ugfx
 
+
 BADGE_EINK_WIDTH  = 296
 BADGE_EINK_HEIGHT = 128
 
+
 font = {}
+creation = {
+    "mouth": int(badge.nvs_get_str("lenny_face", "mouth", "0")),
+    "eyes": int(badge.nvs_get_str("lenny_face", "eyes", "0")),
+    "ears": int(badge.nvs_get_str("lenny_face", "ears", "0")),
+}
+
 
 def resolve_file(rel_path):
     return __file__.rsplit('/', 1)[0] + '/' + rel_path
@@ -61,8 +69,6 @@ def render_creation(at_func, creation, cursor_position=None):
     return (at_x, at_y, total_width, height)
 
 
-ugfx.init()
-
 # Load our custom font.
 for comp_name in ["ears", "eyes", "mouth"]:
     comp_list = []
@@ -86,39 +92,7 @@ for comp_name in ["ears", "eyes", "mouth"]:
             comp.append(Char(filename, f))
     font[comp_name] = comp_list
 
-creation = {
-    "mouth": int(badge.nvs_get_str("lenny_face", "mouth", "0")),
-    "eyes": int(badge.nvs_get_str("lenny_face", "eyes", "0")),
-    "ears": int(badge.nvs_get_str("lenny_face", "ears", "0")),
-}
-cursor_position = 2
-
-
 def store_creation():
     global creation
     for comp_name, val in creation.items():
         badge.nvs_set_str("lenny_face", comp_name, str(val))
-
-def render():
-    ugfx.clear(ugfx.WHITE)
-    render_creation(
-            lambda w, h: (BADGE_EINK_WIDTH // 2 - w // 2, BADGE_EINK_HEIGHT // 2 - h // 2),
-            creation,
-            cursor_position)
-    ugfx.flush()
-
-def cursor_move(delta):
-    global cursor_position
-    cursor_position = (cursor_position + delta + 5) % 5
-    render()
-
-def rotate_selection(delta):
-    global creation
-    global cursor_position
-    global font
-    comp_name = ["ears", "eyes", "mouth", "eyes", "ears"][cursor_position]
-    i = creation[comp_name]
-    n = len(font[comp_name])
-    creation[comp_name] = (creation[comp_name] + delta + n) % n
-    store_creation()
-    render()
