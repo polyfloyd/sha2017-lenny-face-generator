@@ -5,6 +5,6 @@
         "loop": false
     },
     "rtc": false,
-    "loop": true,
+    "loop": false,
     "draw": true
 }
